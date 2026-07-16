@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Northwind Trail Co. — Web SDK Consent Demo</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Site styles (shared with the Classic page) -->
+<link href="css/styles.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- =========================================================
+     SITE HEADER
+========================================================== -->
+<header class="site-header">
+  <div class="container d-flex align-items-center justify-content-between py-3">
+    <a class="brand" href="#top">
+      <span class="brand-mark">NT</span>
+      <span class="brand-name">Northwind Trail Co.</span>
+      <span class="badge-lib sdk-mode-badge">Web SDK</span>
+    </a>
+    <nav class="d-flex align-items-center gap-3">
+      <a class="nav-link-plain d-none d-md-inline" href="#shop">Shop</a>
+      <a class="nav-link-plain d-none d-md-inline" href="#newsletter">Newsletter</a>
+      <div class="mode-switcher">
+        <a href="index.html" class="mode-pill">Classic</a>
+        <a href="analytics-tag.html" class="mode-pill">Analytics (Tag)</a>
+        <a href="websdk.html" class="mode-pill is-active">Web SDK</a>
+      </div>
+      <button id="openPreferencesBtn" class="btn btn-outline-privacy btn-sm" type="button">
+        Privacy Choices
+      </button>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- =========================================================
+       HERO
+  ========================================================== -->
+  <section class="hero">
+    <div class="container">
+      <p class="eyebrow">Consent-aware analytics, made visible — Web SDK edition</p>
+      <h1>Same storefront.<br>Different plumbing underneath.</h1>
+      <p class="hero-sub">
+        This page is the same demo as the Classic version, rebuilt on <strong>alloy.js</strong>
+        (Adobe Experience Platform Web SDK) instead of AppMeasurement.js + VisitorAPI.js.
+        Consent uses the real Adobe consent standard (<code>collect</code> / <code>marketing</code>),
+        and tracking calls are real <code>sendEvent()</code> calls with genuine XDM event
+        shapes. Watch the Analytics Console at the bottom switch between
+        <span class="tag tag-fired">fired</span> and <span class="tag tag-blocked">blocked</span>
+        as you change your privacy settings — consent here is entirely independent from the
+        Classic page's.
+      </p>
+      <div class="d-flex gap-3 flex-wrap">
+        <a href="#shop" class="btn btn-brand">Browse gear</a>
+        <button class="btn btn-outline-privacy" type="button" data-open-console>Open Analytics Console</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       PRODUCT GRID
+  ========================================================== -->
+  <section id="shop" class="section">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">Shop</p>
+        <h2>Trail-tested essentials</h2>
+      </div>
+      <div id="productGrid" class="row g-4">
+        <!-- Product cards injected by js/websdk-app.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       NEWSLETTER (marketing-consent-gated example)
+  ========================================================== -->
+  <section id="newsletter" class="section section-alt">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-7 text-center">
+          <p class="eyebrow">Stay in touch</p>
+          <h2>Get early access to new routes &amp; gear</h2>
+          <p class="text-muted mb-4">
+            Signing up requests an ECID via alloy's real <code>getIdentity</code> command —
+            this only happens if you've granted <strong>Marketing</strong> consent.
+          </p>
+          <form id="newsletterForm" class="newsletter-form" novalidate>
+            <div class="input-group">
+              <input type="email" class="form-control" id="newsletterEmail" placeholder="you@example.com" required>
+              <button class="btn btn-brand" type="submit">Sign up</button>
+            </div>
+          </form>
+          <div id="newsletterFeedback" class="form-feedback mt-3" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- =========================================================
+     FOOTER
+========================================================== -->
+<footer class="site-footer">
+  <div class="container d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <p class="mb-0">© 2026 Northwind Trail Co. — Web SDK edition of the consent demo.</p>
+    <button id="openPreferencesBtnFooter" class="btn btn-link-privacy" type="button">Manage privacy choices</button>
+  </div>
+</footer>
+
+<!-- =========================================================
+     CONSENT BANNER (shown until a choice is made)
+========================================================== -->
+<div id="consentBanner" class="consent-banner" role="dialog" aria-live="polite" aria-label="Cookie consent" hidden>
+  <div class="consent-banner-inner">
+    <div class="consent-banner-text">
+      <p class="consent-banner-title">Your privacy choices</p>
+      <p class="consent-banner-body">
+        We use Adobe Experience Platform Web SDK to understand how the site is used and to
+        personalize content. Nothing is sent to the Edge Network until you say so.
+        Necessary cookies always run to keep the cart and preferences working.
+      </p>
+    </div>
+    <div class="consent-banner-actions">
+      <button id="btnRejectAll" class="btn btn-outline-privacy" type="button">Reject all</button>
+      <button id="btnManagePrefs" class="btn btn-outline-privacy" type="button">Manage preferences</button>
+      <button id="btnAcceptAll" class="btn btn-brand" type="button">Accept all</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     PREFERENCES MODAL
+========================================================== -->
+<div class="modal fade" id="preferencesModal" tabindex="-1" aria-labelledby="preferencesModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="preferencesModalLabel">Manage privacy choices</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+
+        <div class="consent-row">
+          <div>
+            <p class="consent-row-title">Necessary</p>
+            <p class="consent-row-desc">Required for cart, checkout, and remembering your preferences. Always on.</p>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" checked disabled>
+          </div>
+        </div>
+
+        <div class="consent-row">
+          <div>
+            <p class="consent-row-title">Collect <span class="badge-lib">alloy "collect"</span></p>
+            <p class="consent-row-desc">The primary Web SDK gate — lets alloy send any event data to the Edge Network at all.</p>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="consentAnalytics">
+          </div>
+        </div>
+
+        <div class="consent-row">
+          <div>
+            <p class="consent-row-title">Marketing / ECID <span class="badge-lib">alloy "marketing"</span></p>
+            <p class="consent-row-desc">Lets Adobe assign a cross-visit ECID and use it for personalized content.</p>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="consentPersonalization">
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button id="btnRejectAllModal" class="btn btn-outline-privacy" type="button">Reject all</button>
+        <button id="btnSavePrefs" class="btn btn-brand" type="button" data-bs-dismiss="modal">Save preferences</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     ANALYTICS CONSOLE (same signature element as the Classic page)
+========================================================== -->
+<div id="analyticsConsole" class="analytics-console" aria-live="polite">
+  <button id="consoleToggle" class="analytics-console-toggle" type="button" aria-expanded="false">
+    <span class="console-toggle-label">Analytics Console</span>
+    <span id="consentSummary" class="consent-summary">
+      <span class="dot dot-live"></span> loading…
+    </span>
+    <span class="console-chevron">▲</span>
+  </button>
+  <div class="analytics-console-body">
+    <div class="console-status-row">
+      <span class="status-chip" id="statusNecessary">Necessary <strong>ON</strong></span>
+      <span class="status-chip" id="statusAnalytics">Collect consent <strong>—</strong></span>
+      <span class="status-chip" id="statusPersonalization">Marketing consent <strong>—</strong></span>
+      <span class="status-chip status-chip-id" id="statusVisitorId">ECID: <strong>none</strong></span>
+      <span class="status-chip status-chip-id" id="statusMode">Mode: <strong>—</strong></span>
+    </div>
+
+    <div class="console-debug-row">
+      <span class="console-debug-label">Manual alloy commands:</span>
+      <button class="debug-btn" data-optin-cmd="approve-aa">setConsent(collect=y)</button>
+      <button class="debug-btn" data-optin-cmd="deny-aa">setConsent(collect=n)</button>
+      <button class="debug-btn" data-optin-cmd="approve-ecid">setConsent(marketing=y)</button>
+      <button class="debug-btn" data-optin-cmd="deny-ecid">setConsent(marketing=n)</button>
+      <button class="debug-btn debug-btn-primary" data-optin-cmd="complete">sendEvent(debugPing)</button>
+      <button class="debug-btn" data-optin-cmd="fetch">getIdentity()</button>
+    </div>
+
+    <div id="consoleLog" class="console-log"></div>
+  </div>
+</div>
+
+<!-- Bootstrap bundle (Popper + JS) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!--
+  Load order:
+  1. websdk-config.js      your edgeConfigId / orgId / consent mapping
+  2. websdk-loader.js      installs the alloy command-queue stub, loads real alloy.js (or the offline shim)
+  3. websdk-adapter.js     configure() + setConsent()/sendEvent() wrapper, same shape as the Classic page's analytics.js
+  4. websdk-app.js         storefront + console UI — must register its "consent:updated"
+                           listener BEFORE websdk-consent-manager.js's first broadcast
+  5. websdk-consent-manager.js   banner/modal + its own storage key (independent from Classic)
+-->
+<script src="js/websdk-config.js"></script>
+<script src="js/websdk-loader.js"></script>
+<script src="js/websdk-adapter.js"></script>
+<script src="js/websdk-app.js"></script>
+<script src="js/websdk-consent-manager.js"></script>
+
+</body>
+</html>
